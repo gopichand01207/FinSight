@@ -1,0 +1,78 @@
+version: "3.9"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# FinSight Docker Compose — Local Development
+# ──────────────────────────────────────────────────────────────────────────────
+# Services:
+#   finsight-api      → FastAPI backend (port 8000)
+#   finsight-streamlit → Streamlit dashboard (port 8501)
+#   chromadb           → ChromaDB server (port 8002)
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI Backend ──────────────────────────────────────────────────────────
+  finsight-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: runtime
+    container_name: finsight-api
+    image: finsight-api:dev
+    env_file:
+      - .env
+    environment:
+      - CHROMA_PERSIST_DIR=/app/chroma_db
+      - UPLOAD_DIR=/app/data/uploads
+      - DEBUG=true
+    volumes:
+      - ./app:/app/app:ro          # hot reload in dev
+      - chroma_data:/app/chroma_db
+      - upload_data:/app/data/uploads
+    ports:
+      - "8000:8000"
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --log-level info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # ── Streamlit Dashboard ──────────────────────────────────────────────────────
+  finsight-streamlit:
+    image: python:3.11-slim
+    container_name: finsight-streamlit
+    env_file:
+      - .env
+    environment:
+      - API_BASE_URL=http://finsight-api:8000
+    volumes:
+      - ./streamlit_app:/app/streamlit_app:ro
+      - ./requirements.txt:/app/requirements.txt:ro
+    working_dir: /app
+    command: >
+      sh -c "pip install -q streamlit requests pandas &&
+             streamlit run streamlit_app/main.py
+             --server.port 8501
+             --server.address 0.0.0.0
+             --server.headless true"
+    ports:
+      - "8501:8501"
+    depends_on:
+      finsight-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    driver: local
+  upload_data:
+    driver: local
+

@@ -1,0 +1,43 @@
+# Runtime dependencies
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+httptools==0.6.1
+uvloop==0.19.0
+
+# LangChain ecosystem
+langchain==0.2.6
+langchain-openai==0.1.14
+langchain-community==0.2.6
+
+# OpenAI
+openai==1.35.3
+
+# Vector store
+chromadb==0.5.3
+
+# PDF parsing
+PyMuPDF==1.24.5
+
+# Sparse retrieval
+rank-bm25==0.2.2
+
+# Tokenizer
+tiktoken==0.7.0
+
+# Data validation
+pydantic==2.7.4
+pydantic-settings==2.3.3
+
+# Logging
+structlog==24.2.0
+
+# HTTP client (Streamlit dashboard)
+requests==2.32.3
+
+# Data processing
+pandas==2.2.2
+numpy==1.26.4
+
+# Async
+anyio==4.4.0
+
